@@ -30,10 +30,31 @@ Parameters:
     Type: String
     Default: 10.192.130.0/24
 
-  ContainerImage:
+  PHPContainerImage:
     Description: Please enter container image for ECS.
     Type: String
-    Default: 738965884675.dkr.ecr.ap-northeast-1.amazonaws.com/ci-cd-hands-on:node
+    Default: 738965884675.dkr.ecr.ap-northeast-1.amazonaws.com/ci-cd-hands-on:laravel
+
+  NginxContainerImage:
+    Description: Please enter container image for ECS.
+    Type: String
+    Default: 738965884675.dkr.ecr.ap-northeast-1.amazonaws.com/ci-cd-hands-on:nginx
+
+  DbDatabase:
+    Description: Please enter database name.
+    Type: String
+    Default: homestead
+
+  DbUsername:
+    Description: Please enter database master username
+    Type: String
+    Default: homestead
+
+  DbPassword:
+    Description: Please enter database password
+    Type: String
+    Default: password
+    NoEcho: true
 
 Resources:
   ECRRepository:
@@ -185,7 +206,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: "fargate-sg"
-      GroupDescription: "Security group with no ingress rule"
+      GroupDescription: "Security group with ingress rule from lb"
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -208,6 +229,22 @@ Resources:
       Tags:
         - Key: Name
           Value: demo-infra-ALBSecurityGroup
+  
+  RdbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "rdb-sg"
+      GroupDescription: "Security group with ingress rule from fargate"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '3306'
+          ToPort: '3306'
+          SourceSecurityGroupId: !Ref FargateSecurityGroup
+      Tags:
+        - Key: Name
+          Value: demo-infra-RdbSecurityGroup
+
 
   ## ECS Resources
   ECSCluster:
@@ -241,12 +278,49 @@ Resources:
         - FARGATE
       ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
       ContainerDefinitions:
-        - Name: fizzbuzz
-          Image: !Ref ContainerImage
+        - Name: phpfpm
+          Image: !Ref PHPContainerImage
           PortMappings: 
-            - ContainerPort: 80
+            - ContainerPort: 9000
               Protocol: tcp
-
+          LogConfiguration: 
+            LogDriver: "awslogs"
+            Options: 
+              "awslogs-group": !Ref ECSLogGroup
+              "awslogs-region": !Ref AWS::Region 
+              "awslogs-stream-prefix": "awslogs-nginx"
+          Environment:
+            - Name: DB_HOST
+              Value: !GetAtt MySQLInstance.Endpoint.Address
+            - Name: DB_PORT
+              Value: !GetAtt MySQLInstance.Endpoint.Port
+            - Name: DB_DATABASE
+              Value: !Ref DbDatabase
+            - Name: DB_USERNAME
+              Value: !Ref DbUsername
+            - Name: DB_PASSWORD
+              Value: !Ref DbPassword
+        - Name: nginx
+          Image: !Ref NginxContainerImage
+          PortMappings:
+            - ContainerPort: 80
+          LogConfiguration: 
+            LogDriver: "awslogs"
+            Options: 
+              "awslogs-group": !Ref ECSLogGroup
+              "awslogs-region": !Ref AWS::Region
+              "awslogs-stream-prefix": "awslogs-nginx"
+          Environment:
+            - Name: APP_SERVER_HOST
+              Value: localhost
+            - Name: APP_SERVER_PORT
+              Value: 9000
+  ECSLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub /ecs/${AWS::StackName}-log-group
+      RetentionInDays: 1
+          
   ECSService:
     Type: AWS::ECS::Service
     Properties:
@@ -264,7 +338,7 @@ Resources:
               - !Ref PrivateSubnet2
       TaskDefinition: !Ref ECSTaskDefinition
       LoadBalancers:
-        - ContainerName: fizzbuzz
+        - ContainerName: nginx
           ContainerPort: 80
           TargetGroupArn: !Ref TargetGroup
     DependsOn: LoadBalancerListener
@@ -348,6 +422,32 @@ Resources:
                 Effect: Allow
                 Resource: 
                   - "*"
+  
+  CodeBuildCacheBucket:
+    Type: AWS::S3::Bucket
+    
+  MySQLInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      VPCSecurityGroups:
+        - !Ref RdbSecurityGroup
+      AllocatedStorage: '5'
+      DBInstanceClass: db.t2.micro
+      Engine: MySQL
+      DBName: !Ref DbDatabase
+      MasterUsername: !Ref DbUsername
+      MasterUserPassword: !Ref DbPassword
+      DBSubnetGroupName: !Ref MySQLDBSubnetGroup
+    DeletionPolicy: Delete
+
+  MySQLDBSubnetGroup: 
+    Type: AWS::RDS::DBSubnetGroup
+    Properties: 
+      DBSubnetGroupDescription: DB instances are in private subnet
+      SubnetIds: 
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+
 Outputs:
   ALBDNSName:
     Description: Endpoint URL of ALB
@@ -364,3 +464,6 @@ Outputs:
   ECSServiceName:
     Description: Service Name of ECS
     Value: !GetAtt ECSService.Name
+  CodeBuildCachePlace:
+    Description: Cache Place of CodeBuild in S3 Cache Bucket
+    Value: !Sub s3://${CodeBuildCacheBucket}/build-cache
