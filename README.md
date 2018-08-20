@@ -29,7 +29,7 @@ $1 未満
 
 ## 1. ハンズオンで構築する構成
 
-![構成図](https://cacoo.com/diagrams/Bik1Om7JvTVGzpfj-5F49C.png)
+![構成図](https://cacoo.com/diagrams/Bik1Om7JvTVGzpfj-ED9F6.png)
 
 今回は上記の図のような構成を構築します。
 
@@ -40,11 +40,11 @@ $1 未満
 ## 2. サンプルアプリケーションのフォークおよびクローン
 
 まずは、このリポジトリをフォークし、自分のアカウントにリポジトリを作成します。
-サンプルアプリケーションは、指定された数まで FizzBuzz を表示する Node.js による簡単なアプリケーションです
+サンプルアプリケーションは、Laravel のサンプルコードのタスク管理システムをほぼそのまま使用しました。
 
 <img src="https://cdn-ssl-devio-img.classmethod.jp/wp-content/uploads/2018/08/fork-640x210.png" alt="" width="640" height="210" class="alignnone size-medium wp-image-348765" />
 
-上のリンクから GitHub の当該リポジトリのページに移動し、右上の `Fork` というボタンからフォークを実行します。
+このリポジトリの右上の `Fork` というボタンからフォークを実行します。
 
 <img src="https://cdn-ssl-devio-img.classmethod.jp/wp-content/uploads/2018/08/f514b4e78f8a717b73707cc3b38dcff4-640x353.png" alt="" width="640" height="353" class="alignnone size-medium wp-image-348767" />
 
@@ -52,18 +52,15 @@ $1 未満
 作業用のディレクトリで以下のコマンドを実行します。
 
 ```shell
-$ git clone git@github.com:<ご自分のgithubのアカウント名>/ci-cd-hands-on.git
+$ git clone git@github.com:<ご自分のgithubのアカウント名>/ci-cd-hands-on-laravel.git
 ```
 
 クローンされたリポジトリのディレクトリに移動して中身を確認し、クローンが正しく行われたことを確認します。
 
 ```shell
-$ cd ci-cd-handson
+$ cd ci-cd-handson-laravel
 $ ls
-Dockerfile	Rakefile	config		log		template
-Gemfile		app		config.ru	package.json	tmp
-Gemfile.lock	bin		db		public		vendor
-README.md	buildspec.yml	lib		spec
+README.md               artifact                buildspec.yml           cloudformation          codebuild_build.sh      laravel                 nginx
 ```
 
 ## 3. ハンズオン用環境構築用の CloudFormation の実行
@@ -80,15 +77,15 @@ aws iam create-service-linked-role --aws-service-name ecs.amazonaws.com
 
 空の ECS のクラスタを作成し、すぐに削除するなどして ECS のサービスにリンクしたロールが作成された状態にします。
 
-[Launch Stack](https://console.aws.amazon.com/cloudformation/home?region=ap-northeast-1#/stacks/new?stackName=hands-on-environment&templateURL=https://s3-ap-northeast-1.amazonaws.com/ci-cd-hands-on-template/hands-on-environment.template.yaml)
+[Launch Stack](https://console.aws.amazon.com/cloudformation/home?region=ap-northeast-1#/stacks/new?stackName=hands-on-environment&templateURL=https://s3-ap-northeast-1.amazonaws.com/ci-cd-hands-on-template/laravel/hands-on-environment.template.yaml)
 
 上のリンクより、ハンズオン用の環境を構築するための CloudFormation を実行します。
 
 この、CloudFormation によって、以下の図ような構成の環境が作成されます。
 
-![CloudFormationによってい構築される構成](https://cacoo.com/diagrams/Bik1Om7JvTVGzpfj-2D387.png)
+![CloudFormationによってい構築される構成](https://cacoo.com/diagrams/Bik1Om7JvTVGzpfj-E77D3.png)
 
-アプリケーションの動作環境以外に後で CodeBuild で使用するための IAM 　 Role を作成しています。
+アプリケーションの動作環境以外に後で CodeBuild で使用するための IAM Role を作成しています。
 
 作成したスタックが `CREATE_COMPLETE` の状態になるまで待ちます。
 
@@ -96,7 +93,7 @@ aws iam create-service-linked-role --aws-service-name ecs.amazonaws.com
 
 作成したスタックの出力に`ALBDNSName`というキーで出力された値が、今回のサンプルアプリケーションのアクセス先の URL です。アドレスバーにコピペして、サンプルアプリケーションの動作を確認します。
 
-<img src="https://cdn-ssl-devio-img.classmethod.jp/wp-content/uploads/2018/08/99049011a73b9c92d2967f57d2331c56-640x360.png" alt="" width="640" height="360" class="alignnone size-medium wp-image-349754"/>
+<img src="https://cdn-ssl-devio-img.classmethod.jp/wp-content/uploads/2018/08/5aa81c70a3f954197d48427689e8a5e4-640x234.png" alt="" width="640" height="234" class="alignnone size-medium wp-image-353922" />
 
 ## 4. 手動デプロイしてみる（講師が実演します。読み飛ばし可）
 
@@ -105,7 +102,7 @@ ecs-deploy のようなデプロイに便利なツールもありますが、Cod
 まずはデプロイされたことがわかりやすくするため、画面を修正します。
 
 ```shell
-$ vim template/views/index.ejs
+$ vim laravel/resources/views/layouts/app.blade.php
 $ git commit -am "manual deploy"
 ```
 
@@ -114,6 +111,8 @@ $ git commit -am "manual deploy"
 まず、手元で Docker イメージを構築し、ECR にプッシュします。
 
 ```
+$ cd laravel
+
 $ $(aws ecr get-login --no-include-email --region ap-northeast-1)
 
 $ IMAGE_REPOSITORY_NAME=`aws ssm get-parameter --name "IMAGE_REPOSITORY_NAME"| jq -r .Parameter.Value`
@@ -137,7 +136,7 @@ ECS の設定の修正で使用するため、イメージをプッシュした�
 まず、タスク定義の新しいリビジョンを作成します。
 
 環境構築用スタックによって作成されたタスクの新しいリビジョンの作成画面を表示します。
-コンテナ名 fizzbuzz の設定画面に移動し、イメージの指定を先程プッシュしたイメージのものに書き換え新しいリビジョンを作成します。
+コンテナ名 phpfpm の設定画面に移動し、イメージの指定を先程プッシュしたイメージのものに書き換え新しいリビジョンを作成します。
 
 <img src="https://cdn-ssl-devio-img.classmethod.jp/wp-content/uploads/2018/08/a3eea352fa04680f29ce2e75163b5ca5-640x344.png" alt="" width="640" height="344" class="alignnone size-medium wp-image-349193" />
 
@@ -153,7 +152,7 @@ ECS の設定の修正で使用するため、イメージをプッシュした�
 
 今回作成するパイプラインは以下図の左側の部分です。
 
-![構成図](https://cacoo.com/diagrams/Bik1Om7JvTVGzpfj-5F49C.png)
+![構成図](https://cacoo.com/diagrams/Bik1Om7JvTVGzpfj-ED9F6.png)
 
 では、早速作成していきましょう。
 
@@ -184,12 +183,12 @@ ECS の設定の修正で使用するため、イメージをプッシュした�
 | ビルドプロバイダ         | AWS CodeBuild                                                                                 |
 | プロジェクトの設定       | 新しいビルドプロジェクトを作成                                                                |
 | プロジェクト名           | hands-on-project                                                                              |
-| 環境イメージ             | AWS CodeBuild マネージド型イメージの使用                                                      |
-| OS                       | Ubuntu                                                                                        |
-| ランタイム               | Node.js                                                                                       |
-| バージョン               | aws/codebuild/nodejs:10.1.0                                                                   |
+| 環境イメージ             | カスタム Docker イメージの指定                                                                |
+| 環境タイプ               | Linux                                                                                         |
+| Custom image type     | Other                                                                                         |
+| カスタムイメージタイプ   | `katainaka0503/codebuild-php:latest`                       |
 | ビルド仕様               | ソースコードのルートディレクトリの buildspec.yml を使用                                       |
-| キャッシュ タイプ        | キャッシュなし                                                                                |
+| キャッシュ タイプ        | タイプ： `AmazonS3`, 場所: 環境構築用スタックの`CodeBuildCachePlace`の値           |
 | CodeBuild サービスロール | `アカウントから既存のロールを選択します`を選択し環境構築用スタックの出力の値を入力            |
 | VPC                      | No VPC                                                                                        |
 | 特権付与(アドバンスト内) | ✔                                                                                             |
@@ -220,27 +219,25 @@ IAM Role の作成が完了したら「次のステップ」をクリックし�
 
 `Staging`ステージまで緑色になり、デプロイが完了したところで一度正常にページにアクセスできることを確認します。
 
-<img src="https://cdn-ssl-devio-img.classmethod.jp/wp-content/uploads/2018/08/1769187c2286f846c233341f03da13e9-640x207.png" alt="" width="640" height="207" class="alignnone size-medium wp-image-349210" />
-
 ## 6. テストが失敗すると自動デプロイが止まるのを確認
 
 バグが混入した際に、テストで処理が失敗し、デプロイが途中で止まることを確認するため、フォークしたリポジトリのコードを修正します。
 
-エディタで FizzBuzz のロジックが記述されているファイル、`src/model/fizzbuzz.js`を開きます。
+エディタで、`laravel/app/Http/routes.php`を開きます。
 
-意図的にバグを混入させるため、
+意図的にバグを混入させるため、23 行目の
 
 ```
-if (i % 15 == 0) {
+'tasks' => Task::orderBy('created_at', 'asc')->get()
 ```
 
 と書かれた行を
 
 ```
-if (i % 10 == 0) {
+## 'tasks' => Task::orderBy('created_at', 'asc')->get()
 ```
 
-のように修正します。
+のようにコメントアウトします。
 
 修正が終わったらコミットし、GitHub 上にプッシュします。
 
@@ -258,16 +255,16 @@ GitHub にプッシュすると、CodePipeline での処理が開始されます
 
 ## 7. 再度正しいコードに戻して自動デプロイ
 
-先程の修正をもとに戻すため、`src/model/fizzbuzz.js`　を開きます。
+先程の修正をもとに戻すため、`vim laravel/app/Http/routes.php`　を開きます。
 
 ```
-if (i % 10 == 0) {
+## 'tasks' => Task::orderBy('created_at', 'asc')->get()
 ```
 
 のように先程編集した行を
 
 ```
-if (i % 15 == 0) {
+'tasks' => Task::orderBy('created_at', 'asc')->get()
 ```
 
 のように修正し、GitHub にプッシュします。
@@ -310,8 +307,6 @@ CodePipeline を使用することでデプロイやテストが自動で実行�
 リソース間の依存関係がある関係で削除に失敗することがあるため、
 CloudFormation スタックおよびクローンした GitHub のリポジトリは最後に削除を行ってください。
 
-TODO 画像等も含めて手順を正確に提示
-
 ### AWS
  
 #### CodePipeline のパイプラインの削除
@@ -341,6 +336,16 @@ CodeBuild用のロール`hands-on-environment-CodeBuild-ServiceRole`を削除し
 CodePipelineでの他のプロジェクトが存在しない場合は`AWS-CodePipeline-Service`という名前のロールも同様の手順で削除しましょう。
 
 <img src="https://cdn-ssl-devio-img.classmethod.jp/wp-content/uploads/2018/08/b7f0d8a5fdc73ca64c3baaa31e0639ff-640x379.png" alt="" width="640" height="379" class="alignnone size-medium wp-image-354248" />
+
+#### CodeBuildのキャッシュ用S3バケットの中身を削除
+
+<img src="https://cdn-ssl-devio-img.classmethod.jp/wp-content/uploads/2018/08/9c68168869e26292ebd0650f21e3d38c-640x283.png" alt="" width="640" height="283" class="alignnone size-medium wp-image-354267" />
+
+`hands-on-environment-codebuildcachebucket-***`という名前のバケットの画面に移動し、
+
+<img src="https://cdn-ssl-devio-img.classmethod.jp/wp-content/uploads/2018/08/c72ecc6de66e24061ef1a12a125526591-640x382.png" alt="" width="640" height="382" class="alignnone size-medium wp-image-354268" />
+
+中身のオブジェクトをすべて削除します。
 
 #### CodePipeline のアーティファクト保存用 S3 バケット削除
 
