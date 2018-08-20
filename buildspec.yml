@@ -1,51 +1,59 @@
 version: 0.2
 
-#env:
-#  variables:
-#    key: "value"
-#    key: "value"
-#  parameter-store:
-#    key: "value"
-#    key: "value"
-
+environment_variables:
+  plaintext:
+    APP_NAME: hands-on-app
 phases:
   install:
     commands:
-      - echo install started on `date`
-      ## 依存パッケージをインストール
-      - npm install
+      ## cd
+      ## laravelのリポジトリに入っておく
+      - cd laravel
+
+      ## Dockerデーモンを起動し、正常に起動が終わるまで待つ。
+      - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375 --storage-driver=overlay&
+      - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
+
+      ## MySQLをインストールし、正常に起動できるまで待つ
+      - docker-compose up -d
+
+      ## composer実行
+      - composer install --dev
   pre_build:
     commands:
       ## ECRにログイン
-      - echo Logging in to Amazon ECR...
       - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
 
       ## Dockerイメージのタグとして使用するため、Gitのコミットハッシュを取得
       - IMAGE_TAG=$CODEBUILD_RESOLVED_SOURCE_VERSION
+
+      ## .env.dev -> .envにリネーム
+      - mv .env.dev .env
   build:
     commands:
-      - echo Build started on `date`
-
-      ## テスト実行
-      - echo Testing the source code...
-      - npm test
-
       ## Dockerイメージのビルド
-      - echo Building the Docker image...
-      - docker build -t $IMAGE_REPOSITORY_NAME:$IMAGE_TAG .
+      - docker pull $IMAGE_REPOSITORY_NAME:$APP_NAME && CACHE_OPTION="--cache-from $IMAGE_REPOSITORY_NAME:$APP_NAME" || true
+      - docker build $CACHE_OPTION -t $IMAGE_REPOSITORY_NAME:$IMAGE_TAG -t $IMAGE_REPOSITORY_NAME:$APP_NAME .
+
+      ## 構築したイメージ上で'composer run ci-check'しテスト実行
+      - docker run -e "DB_HOST=127.0.0.1" -e "DB_PORT=3306" -e "DB_DATABASE=mysql" -e "DB_USERNAME=homestead" -e "DB_PASSWORD=password" --network=host --entrypoint="composer" $IMAGE_REPOSITORY_NAME:$IMAGE_TAG run ci-check
 
       ## DockerイメージのECRへのプッシュ
-      - docker push $IMAGE_REPOSITORY_NAME:$IMAGE_TAG
-      - echo Writing image definitions file...
+      - docker push $IMAGE_REPOSITORY_NAME
+
+      - cd ..
 
       ## ECSにどのイメージを使用するか指示するためのファイルを作成
-      - printf '[{"name":"fizzbuzz","imageUri":"%s"}]' $IMAGE_REPOSITORY_NAME:$IMAGE_TAG > imagedefinitions.json
-  post_build:
-    commands:
-      - echo Build completed on `date`
-#cache:
-#  paths:
-#   - path
+      - printf '[{"name":"phpfpm","imageUri":"%s"}]' $IMAGE_REPOSITORY_NAME:$IMAGE_TAG > imagedefinitions.json
+cache:
+  paths:
+    # Composer用のキャッシュ
+    - /root/.composer/**/*
+
+    # Node用のキャッシュ
+    - /root/.npm/**/*
+    - /usr/lib/node_modules/**/*
+    - /usr/lib/node_modules/**/*
 artifacts:
   ## buildの最後で作成したファイルをアーティファクトを流す
   files: imagedefinitions.json
