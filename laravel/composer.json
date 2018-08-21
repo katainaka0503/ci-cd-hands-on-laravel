@@ -47,7 +47,14 @@
             "php artisan optimize"
         ],
         "migrate": [
+            "@migrate-dev",
+            "@migrate-testing"
+        ],
+        "migrate-dev": [
             "php artisan migrate --force"
+        ],
+        "migrate-testing": [
+            "php artisan migrate --force --database=mysql_testing"
         ],
         "phpcs": [
             "vendor/bin/phpcs --standard=phpcs.xml ."
@@ -56,7 +63,7 @@
             "vendor/bin/phpunit --bootstrap vendor/autoload.php tests"
         ],
         "ci-check": [
-            "@migrate",
+            "@migrate-testing",
             "@phpcs",
             "@test"
         ]
