@@ -6,7 +6,6 @@ environment_variables:
 phases:
   install:
     commands:
-      ## cd
       ## laravelのリポジトリに入っておく
       - cd laravel
 

@@ -6,7 +6,6 @@ environment_variables:
 phases:
   install:
     commands:
-      ## cd
       ## laravelのリポジトリに入っておく
       - cd laravel
 
@@ -42,3 +41,13 @@ phases:
       - echo Testing the source code...
       - echo Build started on `date`
       - docker run -e "DB_HOST=127.0.0.1" -e "DB_PORT=3306" -e "DB_DATABASE=mysql" -e "DB_USERNAME=homestead" -e "DB_PASSWORD=password" --network=host --entrypoint="composer" $APP_NAME run ci-check
+# キャッシュを利用する場合はコメントアウトを外してください
+# cache:
+#   paths:
+#     # Composer用のキャッシュ
+#     - /root/.composer/**/*
+
+#     # Node用のキャッシュ
+#     - /root/.npm/**/*
+#     - /usr/lib/node_modules/**/*
+#     - /usr/lib/node_modules/**/*
