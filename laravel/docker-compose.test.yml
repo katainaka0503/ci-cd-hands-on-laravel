@@ -1,6 +1,6 @@
 version: '3'
 services:
-  mysql:
+  test-mysql:
     image: mysql:5.7
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
@@ -8,10 +8,8 @@ services:
       - MYSQL_USER=homestead
       - MYSQL_PASSWORD=password
     ports:
-      - 3306:3306
-    volumes:
-      - ./mysql-data:/var/lib/mysql
+      - 3307:3306
   # redis:
   #   image: redis:alpine
   #   ports:
-  #     - 6379:6379
+  #     - 6380:6379
