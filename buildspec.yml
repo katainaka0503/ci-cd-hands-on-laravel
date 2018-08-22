@@ -2,16 +2,30 @@ version: 0.2
 
 environment_variables:
   plaintext:
+<<<<<<< HEAD
     APP_NAME: hands-on-app
+=======
+    APP_NAME: baby
+>>>>>>> laravel
 phases:
   install:
     commands:
       ## laravelのリポジトリに入っておく
       - cd laravel
 
+<<<<<<< HEAD
       ## Dockerデーモンを起動し、正常に起動が終わるまで待つ。
       - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375 --storage-driver=overlay&
       - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
+=======
+      - echo install started on `date`
+
+      ## Dockerデーモンを起動し、正常に起動が終わるまで待つ。
+      - echo executed dockerd on `date`
+      - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375 --storage-driver=overlay&
+      - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
+      - echo dockerd started
+>>>>>>> laravel
 
       ## MySQLをインストールし、正常に起動できるまで待つ
       - docker-compose up -d
