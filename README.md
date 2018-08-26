@@ -239,10 +239,10 @@ IAM Role の作成が完了したら「次のステップ」をクリックし�
 と書かれた行を
 
 ```
-## 'tasks' => Task::orderBy('created_at', 'asc')->get()
+## 'tasks' => [] #Task::orderBy('created_at', 'asc')->get()
 ```
 
-のようにコメントアウトします。
+のようにロジック部をコメントアウトし、代わりに空の配列を返すようにします。
 
 修正が終わったらコミットし、GitHub 上にプッシュします。
 
@@ -263,7 +263,7 @@ GitHub にプッシュすると、CodePipeline での処理が開始されます
 先程の修正をもとに戻すため、`vim laravel/app/Http/routes.php`　を開きます。
 
 ```
-## 'tasks' => Task::orderBy('created_at', 'asc')->get()
+## 'tasks' => [] #Task::orderBy('created_at', 'asc')->get()
 ```
 
 のように先程編集した行を
