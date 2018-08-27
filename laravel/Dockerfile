@@ -1,8 +1,8 @@
 FROM php:7.1-fpm-alpine
 
 RUN apk update \
-    && apk add --no-cache mysql-client php7-mysqlnd gettext openssl git \
-    && docker-php-ext-install mysqli pdo pdo_mysql mbstring
+    && apk add --no-cache mysql-client php7-mysqlnd gettext openssl git zlib-dev \
+    && docker-php-ext-install mysqli pdo pdo_mysql mbstring zip
 
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
   && php composer-setup.php --install-dir=/usr/local/bin --filename=composer \
