@@ -16,6 +16,9 @@ phases:
       ## MySQLをインストールし、正常に起動できるまで待つ
       - docker-compose -f docker-compose.test.yml up -d
 
+      ## .env.dev -> .envにリネーム
+      - cp .env.dev .env
+
       ## composer実行
       - composer install --dev
   pre_build:
@@ -25,9 +28,6 @@ phases:
 
       ## Dockerイメージのタグとして使用するため、Gitのコミットハッシュを取得
       - IMAGE_TAG=$CODEBUILD_RESOLVED_SOURCE_VERSION
-
-      ## .env.dev -> .envにリネーム
-      - mv .env.dev .env
   build:
     commands:
       ## Dockerイメージのビルド
@@ -51,7 +51,6 @@ cache:
 
     # Node用のキャッシュ
     - /root/.npm/**/*
-    - /usr/lib/node_modules/**/*
     - /usr/lib/node_modules/**/*
 artifacts:
   ## buildの最後で作成したファイルをアーティファクトを流す
