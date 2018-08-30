@@ -434,6 +434,7 @@ Resources:
       AllocatedStorage: '5'
       DBInstanceClass: db.t2.micro
       Engine: MySQL
+      EngineVersion: 5.7
       DBName: !Ref DbDatabase
       MasterUsername: !Ref DbUsername
       MasterUserPassword: !Ref DbPassword
