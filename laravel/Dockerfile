@@ -1,8 +1,11 @@
 FROM php:7.1-fpm-alpine
 
 RUN apk update \
-    && apk add --no-cache mysql-client php7-mysqlnd gettext openssl git zlib-dev \
+    && apk add --no-cache mysql-client php7-mysqlnd gettext openssl ca-certificates git zlib-dev \
     && docker-php-ext-install mysqli pdo pdo_mysql mbstring zip
+
+RUN wget https://github.com/Droplr/aws-env/raw/master/bin/aws-env-linux-amd64 -O /bin/aws-env && \
+  chmod +x /bin/aws-env
 
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
   && php composer-setup.php --install-dir=/usr/local/bin --filename=composer \
@@ -18,4 +21,4 @@ RUN composer install --dev
 
 COPY --chown=www-data:www-data ./.env.prod.template .env.template
 
-ENTRYPOINT  ["/bin/sh", "-c", "envsubst '$$DB_HOST $$DB_PORT $$DB_DATABASE $$DB_USERNAME $$DB_PASSWORD' < /var/www/laravel/.env.template > /var/www/laravel/.env && php artisan migrate --force && docker-php-entrypoint php-fpm"]
+ENTRYPOINT  ["/bin/ash", "-c" , "eval $(aws-env) && envsubst '$$DB_HOST $$DB_PORT $$DB_DATABASE $$DB_USERNAME $$DB_PASSWORD' < /var/www/laravel/.env.template > /var/www/laravel/.env && php artisan migrate --force && docker-php-entrypoint php-fpm"]
