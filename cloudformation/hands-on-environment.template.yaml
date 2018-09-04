@@ -267,6 +267,36 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
 
+  ECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-ECSTaskExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: P
+          PolicyDocument: 
+            Version: '2012-10-17'
+            Statement:
+            - Sid: ''
+              Effect: Allow
+              Action:
+                - ssm:DescribeParameters
+                - ssm:GetParameters
+              Resource: "*"
+            - Sid: ''
+              Effect: Allow
+              Action:
+                - kms:Decrypt
+              Resource:
+                - arn:aws:kms:us-east-1:738965884675:key/*
+
   ECSTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
@@ -276,6 +306,7 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities: 
         - FARGATE
+      TaskRokeArn: !GetAtt  ECSTaskRole.Arn
       ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
       ContainerDefinitions:
         - Name: phpfpm
@@ -358,7 +389,7 @@ Resources:
     Properties:
       Name: /demo/app/nginx/APP_SERVER_PORT
       Description: phpfpm server port
-      Type : Integer
+      Type : Number
       Value: 9000
 
   ECSLogGroup:
@@ -387,7 +418,15 @@ Resources:
         - ContainerName: nginx
           ContainerPort: 80
           TargetGroupArn: !Ref TargetGroup
-    DependsOn: LoadBalancerListener
+    DependsOn: 
+      - LoadBalancerListener
+      - DBHostParameter
+      - DBPortParameter
+      - DBDatabaseParameter
+      - DBUsernameParameter
+      - DBPasswordParameter
+      - AppServerHostParameter
+      - AppServerPortParameter
 
   ## ALB Resources
   ALB:
