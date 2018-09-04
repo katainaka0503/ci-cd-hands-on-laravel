@@ -270,7 +270,7 @@ Resources:
   ECSTaskRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub ${AWS::StackName}-ECSTaskExecutionRole
+      RoleName: !Sub ${AWS::StackName}-ECSTaskRole
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -280,7 +280,7 @@ Resources:
               Service: ecs-tasks.amazonaws.com
             Action: sts:AssumeRole
       Policies:
-        - PolicyName: P
+        - PolicyName: ${AWS::StackName}-ECSTaskRolePolicy
           PolicyDocument: 
             Version: '2012-10-17'
             Statement:
