@@ -21,6 +21,8 @@ RUN composer install
 
 COPY --chown=www-data:www-data ./.env.prod.template .env.template
 
-CMD ["php-fpm"]
+RUN chmod +x ./entrypoint.sh
 
-ENTRYPOINT  ["/bin/ash", "-c" , "eval $(aws-env) && envsubst '$$DB_HOST $$DB_PORT $$DB_DATABASE $$DB_USERNAME $$DB_PASSWORD' < /var/www/laravel/.env.template > /var/www/laravel/.env && php artisan migrate --force && docker-php-entrypoint"]
+ENTRYPOINT ["./entrypoint.sh"]
+
+CMD ["php-fpm"]

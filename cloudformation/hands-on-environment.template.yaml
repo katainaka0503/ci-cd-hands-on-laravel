@@ -288,14 +288,14 @@ Resources:
               Effect: Allow
               Action:
                 - ssm:DescribeParameters
-                - ssm:GetParameters
+                - ssm:Get*
               Resource: "*"
             - Sid: ''
               Effect: Allow
               Action:
                 - kms:Decrypt
               Resource:
-                - arn:aws:kms:us-east-1:738965884675:key/*
+                - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*
 
   ECSTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -306,7 +306,7 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities: 
         - FARGATE
-      TaskRokeArn: !GetAtt  ECSTaskRole.Arn
+      TaskRoleArn: !GetAtt  ECSTaskRole.Arn
       ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
       ContainerDefinitions:
         - Name: phpfpm
@@ -319,12 +319,12 @@ Resources:
             Options: 
               "awslogs-group": !Ref ECSLogGroup
               "awslogs-region": !Ref AWS::Region 
-              "awslogs-stream-prefix": "awslogs-nginx"
+              "awslogs-stream-prefix": "awslogs-phpfpm"
           Environment:
             - Name: AWS_ENV_PATH
               Value: /demo/app/phpfpm/
             - Name: AWS_REGION
-              Value: ap-northeast-1
+              Value: !Ref AWS::Region
         - Name: nginx
           Image: !Ref NginxContainerImage
           PortMappings:
@@ -339,7 +339,7 @@ Resources:
             - Name: AWS_ENV_PATH
               Value: /demo/app/nginx/
             - Name: AWS_REGION
-              Value: ap-northeast-1
+              Value: !Ref AWS::Region
 
   DBHostParameter: 
     Type: "AWS::SSM::Parameter"
