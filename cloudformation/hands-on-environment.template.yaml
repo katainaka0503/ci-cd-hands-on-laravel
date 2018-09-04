@@ -280,7 +280,7 @@ Resources:
               Service: ecs-tasks.amazonaws.com
             Action: sts:AssumeRole
       Policies:
-        - PolicyName: ${AWS::StackName}-ECSTaskRolePolicy
+        - PolicyName: !Sub ${AWS::StackName}-ECSTaskRolePolicy
           PolicyDocument: 
             Version: '2012-10-17'
             Statement:
@@ -389,8 +389,8 @@ Resources:
     Properties:
       Name: /demo/app/nginx/APP_SERVER_PORT
       Description: phpfpm server port
-      Type : Number
-      Value: 9000
+      Type : String
+      Value: "9000"
 
   ECSLogGroup:
     Type: AWS::Logs::LogGroup
