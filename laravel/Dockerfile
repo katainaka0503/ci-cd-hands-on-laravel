@@ -21,4 +21,6 @@ RUN composer install --dev
 
 COPY --chown=www-data:www-data ./.env.prod.template .env.template
 
-ENTRYPOINT  ["/bin/ash", "-c" , "eval $(aws-env) && envsubst '$$DB_HOST $$DB_PORT $$DB_DATABASE $$DB_USERNAME $$DB_PASSWORD' < /var/www/laravel/.env.template > /var/www/laravel/.env && php artisan migrate --force && docker-php-entrypoint php-fpm"]
+CMD ["php-fpm"]
+
+ENTRYPOINT  ["/bin/ash", "-c" , "eval $(aws-env) && envsubst '$$DB_HOST $$DB_PORT $$DB_DATABASE $$DB_USERNAME $$DB_PASSWORD' < /var/www/laravel/.env.template > /var/www/laravel/.env && php artisan migrate --force && docker-php-entrypoint"]
