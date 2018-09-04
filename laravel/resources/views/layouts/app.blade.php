@@ -32,7 +32,7 @@
 
                 <!-- Branding Image -->
                 <a class="navbar-brand" href="{{ url('/') }}">
-                    Task List CodePipelineでデプロイされました
+                    Task List CloudFormationでデプロイされました
                 </a>
             </div>
 
