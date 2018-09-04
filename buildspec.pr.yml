@@ -24,7 +24,7 @@ phases:
       - cp .env.dev .env
 
       ## composer実行
-      - composer install --dev
+      - composer install
   pre_build:
     commands:
 

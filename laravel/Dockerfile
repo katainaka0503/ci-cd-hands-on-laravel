@@ -17,7 +17,7 @@ COPY --chown=www-data:www-data . /var/www/laravel
 
 COPY --chown=www-data:www-data ./.env.dev .env
 
-RUN composer install --dev
+RUN composer install
 
 COPY --chown=www-data:www-data ./.env.prod.template .env.template
 
