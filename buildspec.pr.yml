@@ -18,7 +18,7 @@ phases:
       - echo dockerd started
 
       ## MySQLをインストールし、正常に起動できるまで待つ
-      - docker-compose -f docker-compose.test.yml up -d
+      - docker-compose up -d mysql-test
 
       ## .env.dev -> .envにリネーム
       - cp .env.dev .env
