@@ -65,7 +65,7 @@
             "vendor/bin/phpunit --bootstrap vendor/autoload.php tests"
         ],
         "ci-check": [
-            "@migrate-testing",
+            "@migrate-dev",
             "@phpcs",
             "@test"
         ]

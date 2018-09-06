@@ -35,7 +35,7 @@ phases:
       - docker build $CACHE_OPTION -t $IMAGE_REPOSITORY_NAME:$IMAGE_TAG -t $IMAGE_REPOSITORY_NAME:$APP_NAME .
 
       ## 構築したイメージ上で'composer run ci-check'しテスト実行
-      - docker run -e "DB_HOST=127.0.0.1" -e "DB_PORT=3307" -e "DB_DATABASE=mysql" -e "DB_USERNAME=homestead" -e "DB_PASSWORD=password" --network=host --entrypoint="composer" $IMAGE_REPOSITORY_NAME:$IMAGE_TAG run ci-check
+      - docker run -e "DB_HOST=127.0.0.1" -e "DB_PORT=3307" -e "DB_DATABASE=mysql" -e "DB_USERNAME=homestead" -e "DB_PASSWORD=password" --network=host $IMAGE_REPOSITORY_NAME:$IMAGE_TAG composer run ci-check
 
       ## DockerイメージのECRへのプッシュ
       - docker push $IMAGE_REPOSITORY_NAME
