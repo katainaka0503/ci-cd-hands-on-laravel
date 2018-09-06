@@ -245,7 +245,6 @@ Resources:
         - Key: Name
           Value: demo-infra-RdbSecurityGroup
 
-
   ## ECS Resources
   ECSCluster:
     Type: AWS::ECS::Cluster
@@ -347,14 +346,14 @@ Resources:
       Name: /demo/app/phpfpm/DB_HOST
       Description: DB host name
       Type: String
-      Value: !GetAtt MySQLInstance.Endpoint.Address
+      Value: !GetAtt PostgresInstance.Endpoint.Address
   DBPortParameter: 
     Type: "AWS::SSM::Parameter"
     Properties: 
       Name: /demo/app/phpfpm/DB_PORT
       Description: DB port
       Type: String
-      Value: !GetAtt MySQLInstance.Endpoint.Port
+      Value: !GetAtt PostgresInstance.Endpoint.Port
   DBDatabaseParameter: 
     Type: "AWS::SSM::Parameter"
     Properties: 
@@ -511,22 +510,22 @@ Resources:
   CodeBuildCacheBucket:
     Type: AWS::S3::Bucket
     
-  MySQLInstance:
+  PostgresInstance:
     Type: AWS::RDS::DBInstance
     Properties:
       VPCSecurityGroups:
         - !Ref RdbSecurityGroup
       AllocatedStorage: '5'
       DBInstanceClass: db.t2.micro
-      Engine: MySQL
-      EngineVersion: 5.7
+      Engine: postgres
+      EngineVersion: 10.4
       DBName: !Ref DBDatabase
       MasterUsername: !Ref DBUsername
       MasterUserPassword: !Ref DBPassword
-      DBSubnetGroupName: !Ref MySQLDBSubnetGroup
+      DBSubnetGroupName: !Ref PostgresDBSubnetGroup
     DeletionPolicy: Delete
 
-  MySQLDBSubnetGroup: 
+  PostgresDBSubnetGroup: 
     Type: AWS::RDS::DBSubnetGroup
     Properties: 
       DBSubnetGroupDescription: DB instances are in private subnet
