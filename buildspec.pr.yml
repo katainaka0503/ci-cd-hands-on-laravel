@@ -17,8 +17,8 @@ phases:
       - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
       - echo dockerd started
 
-      ## MySQLをインストールし、正常に起動できるまで待つ
-      - docker-compose up -d mysql-test
+      ## Postgresqlをインストールし、正常に起動できるまで待つ
+      - docker-compose up -d postgres-test
 
       ## .env.dev -> .envにリネーム
       - cp .env.dev .env
@@ -40,7 +40,7 @@ phases:
       - docker build -t $APP_NAME .
 
       ## 構築したイメージ上で'composer run ci-check'しテスト実行
-      - docker run -e "DB_HOST=127.0.0.1" -e "DB_PORT=3307" -e "DB_DATABASE=mysql" -e "DB_USERNAME=homestead" -e "DB_PASSWORD=password" --network=host $IMAGE_REPOSITORY_NAME:$IMAGE_TAG  composer run ci-check
+      - docker run -e "DB_HOST=127.0.0.1" -e "DB_PORT=5433" -e "DB_DATABASE=mysql" -e "DB_USERNAME=homestead" -e "DB_PASSWORD=password" --network=host $IMAGE_REPOSITORY_NAME:$IMAGE_TAG  composer run ci-check
 # キャッシュを利用する場合はコメントアウトを外してください
 # cache:
 #   paths:

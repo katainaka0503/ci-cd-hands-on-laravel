@@ -25,8 +25,8 @@
         <env name="QUEUE_DRIVER" value="sync"/>
 
         <env name="DB_HOST" value="127.0.0.1" />
-        <env name="DB_PORT" value="3307" />
-        <env name="DB_DATABASE" value="mysql" />
+        <env name="DB_PORT" value="5433" />
+        <env name="DB_DATABASE" value="homestead" />
         <env name="DB_USERNAME" value="homestead" />
         <env name="DB_PASSWORD" value="password" />
     </php>

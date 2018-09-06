@@ -1,8 +1,8 @@
 FROM php:7.1-fpm-alpine
 
 RUN apk update \
-    && apk add --no-cache mysql-client php7-mysqlnd gettext openssl ca-certificates git zlib-dev \
-    && docker-php-ext-install mysqli pdo pdo_mysql mbstring zip
+    && apk add --no-cache postgresql-dev gettext openssl ca-certificates git zlib-dev \
+    && docker-php-ext-install mysqli pdo pdo_pgsql mbstring zip
 
 RUN wget https://github.com/Droplr/aws-env/raw/master/bin/aws-env-linux-amd64 -O /bin/aws-env && \
   chmod +x /bin/aws-env
