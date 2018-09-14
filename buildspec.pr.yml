@@ -6,7 +6,7 @@ environment_variables:
 phases:
   install:
     commands:
-      ## laravelのリポジトリに入っておく
+      ## laravelのディレクトリに入っておく
       - cd laravel
 
       - echo install started on `date`

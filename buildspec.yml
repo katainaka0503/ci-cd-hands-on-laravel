@@ -6,7 +6,7 @@ environment_variables:
 phases:
   install:
     commands:
-      ## laravelのリポジトリに入っておく
+      ## laravelのディレクトリに入っておく
       - cd laravel
 
       ## Dockerデーモンを起動し、正常に起動が終わるまで待つ。
